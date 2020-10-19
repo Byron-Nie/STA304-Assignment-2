@@ -1,0 +1,157 @@
+---
+title: "Factors Affect the Ontario Children Population"
+author: "Ziru NIE, Yida WANG, Aochen HU, Yuxin DU"
+date: 2020-10-20
+categories: ["R"]
+tags: ["R Markdown", "plot", "regression"] 
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+library(tidyverse)
+df <- read.csv("/cloud/project/gss.csv")
+gss <- read.csv("/cloud/project/gss.csv")
+```
+
+## Factors Affect the Ontario Children Population 
+
+# Name(s) of Author(s) 
+Ziru NIE, 1004158591
+Yida WANG, 1005121342
+Aochen HU, 1004148996
+Yuxin DU, 1004174350
+#Date 2020/10/20
+
+## Abstract
+
+Nowadays, the falling fertility rate has been a primary concern for many developed countries. Low fertility rate leads to an unhealthy distribution of labour force and henceforth will result in market disequilibrium. This research focuses on the underlying factors affecting the number of children in each household in Canada. In the following research, the dependent variable of interest is the total number of children for Canadian households, which we conduct multiple linear regression of it concerning some independent variables. Although there is a dispersion of the regression results between Canada and the province of Ontario, we observe similar relationships of what factors affect the total number of children except for the family income. The total number of children is positively affected by age, the number of marriages, live with partner and life feelings. If people live with their partners or people living in non-census metropolitan areas (non-CMAs), these variables also result in a higher total number of children. However, if the respondents are male or intend to have more children, the total number of children is relatively lower.
+
+## Introduction
+
+The total number of children measures the number of children a family in Canada has during their childbearing years. Note that many factors can affect the total number of children and they are subject to subjectivity.\newline
+
+Prior literature discussed the relationships of the total number of children with income level, age of the couple, number of children the couple intends to have, and the urban-rural origin (Norville et al, 2003) for the study of fertility rate. They have found that younger couples tend to choose childlessness. Moreover,  the fertility rate is also affected by the times of marriages because the time spent between marriages is the time lost for reproduction women. Scholars have also discussed that partnership and the number of children have strong associations (Grundy et al, 2019).\newline
+
+Therefore, we include the above independent variables into our analysis and also the variable of if people are living with their partners because they may have more children as his or her partner is not out of reach. Henceforth provides couples with the opportunity to have more children.\newline
+
+The remainder of this paper is organized as follows. In Section "Data", we discuss the independent variables used to conduct multiple linear regression and why we choose them. Section "Model" specifies the R code and the regression results. Section "Results" analyzes the regression tables, figures, and intuitions. Section "Discussion" concludes. Section "Weaknesses" discusses the weaknesses of this study. Section "Next Steps" discusses what future study should focus on.
+
+## Data
+
+The General Social Survey data was collected through the CHASS website of the University of Toronto. They used a stratified sampling method to divide people in Canada by the geographic areas (i.e. provinces) as of the user guide suggests. The data was cleaned by adapting the gss_cleaning.R provided by Rohan and Caetano. The target population is set as all households in Canadian provinces except Yukon, Nunavut, Northwest and full-time residents of institutions. The frame population is the lists of telephone numbers in use available to Statistics Canada according to GSS31_User_Guide. The survey data was found by conducting telephone survey. The overall response rate for the 2017 GSS was 52.4%. Therefore, it may subject to non-response errors.\newline
+
+Our dependent variable of interest is the total number of children for Canadian households. We henceforth include independent variables of: age, family income, number of marriages, dummy variable of if the respondents is living with their partners, number of total children they are intended to have, dummy variable of if the respondents are male, dummy variable of which type of counties does the respondents live in, and their feelings of lives.\newline
+
+To study the number of children that residents in Canada have, we reckon it has a relationship with the ages of the respondents. The older they are, the more children they may have. Number of marriages also play a significant role in the number of children since people may want to have children with each of their partners (if applicable). Moreover, if the respondent is living with his or her partner, they may have more children as his or her partner is not out of reach and it provides the couples the opportunity to have more children. It is not hard to understand that if the respondents have the intentions to have more child and they are happy with their lives, the number of children should be higher. On the other hand, we suggest that people who live in census metropolitan areas (CMAs) could have lower number of children than people who live in non CMA areas. However, we are not sure how does family income affect the number of children since lots of people today with higher income tend to have less children, but at the same time, they are more affordable to have more children. We also include the dummy variable of if the respondents are male because people may also have children if they have not married before and the fathers may not even know they have children. Therefore, it could be the case that female respondents have more children than male respondents. \newline
+
+In the following session, we will discuss which variables affect the number of children in Canada. Moreover, to test the robustness of our regression, we also conduct the regression on residents in Ontario, Canada.
+
+
+## Model
+```{r, echo=FALSE}
+ddf <- gss %>%  select(age, total_children, number_marriages, lives_with_partner, number_total_children_intention, has_grandchildren, is_male, pop_center, feelings_life)
+df %>% ggplot(aes(x = total_children)) + geom_histogram() + ggtitle("Figure 1")
+df %>% ggplot(aes(x = number_marriages)) + geom_histogram() + ggtitle("Figure 2")
+df %>% ggplot(aes( x = feelings_life)) + geom_histogram() + ggtitle("Figure 3")
+df %>% ggplot(aes(y = number_total_children_intention, x = age)) +geom_point() + ggtitle("Figure 4")
+df %>% ggplot(aes(y = total_children, x = age)) + geom_point() + ggtitle("Figure 5")
+
+mod <- lm(total_children ~ 0 + age + number_marriages + lives_with_partner + number_total_children_intention + has_grandchildren + is_male + pop_center + feelings_life, data = df)
+summary(mod)
+
+gss %>% group_by(region) %>% summarise(n = n())
+
+
+df2 <- gss %>% filter(region =="Ontario")%>% select(age, total_children, income_family, number_marriages, lives_with_partner, number_total_children_intention, is_male, pop_center, feelings_life) 
+df2 %>% ggplot(aes(x = total_children)) + geom_histogram() + ggtitle("Figure 6")
+mod2<- lm( total_children ~ 0 + age + number_marriages + lives_with_partner + number_total_children_intention  + is_male + pop_center + feelings_life + income_family, data = df2)
+summary(mod2)#Adjusted R-squared:  0.6669 
+
+mod_final<- lm(total_children ~ 0 + age + number_marriages + lives_with_partner + number_total_children_intention + pop_center, data = df2)
+
+summary(mod_final)#Adjusted R-squared:  0.6669 
+
+##diagnostic checking
+
+#leverge points/outlier
+h <- hatvalues(mod_final)
+YES <- 2 * (dim(model.matrix(mod_final))[2])/nrow(df2)
+points <- which(h > YES)
+points#alots
+
+plot(mod_final,3)
+plot(mod_final,2)
+plot(mod_final,1)
+
+
+# Alternative model
+df <- df %>% filter(!is.na(feelings_life)) %>% mutate(happy = ifelse(feelings_life >= mean(df$feelings_life), 1, 0))
+df <- df %>% filter(!is.na(feelings_life)) %>% mutate(happy = ifelse(feelings_life >= mean(df$feelings_life), 1, 0))
+
+mod <-glm(total_children ~ 0 + age + number_marriages + lives_with_partner + number_total_children_intention + has_grandchildren + is_male + pop_center + feelings_life, data = df)
+
+summary(mod)
+
+# Alternative model
+df <- df %>% filter(!is.na(feelings_life)) %>% mutate(happy = ifelse(feelings_life >= mean(df$feelings_life), 1, 0))
+df <- df %>% filter(!is.na(feelings_life)) %>% mutate(happy = ifelse(feelings_life >= mean(df$feelings_life), 1, 0))
+
+mod2<- lm( total_children ~ 0 + age + number_marriages + lives_with_partner + number_total_children_intention  + is_male + pop_center + feelings_life + income_family, data = df2)
+
+summary(mod2)
+
+```
+
+
+
+The sampling method is the key that would influence the survey's reliability. The General Social Survey(GSS) employed stratified random sampling, which is the sampling method to divide the population into strata by geographic area. After selecting variables for the analysis, Figure 1 shows over 6,000 people have no child, and over 6000 people have two children. Figure 2 shows the peak of one marriage, which implies most people have one wedding. The following paragraphs of Figure 3, 4, 5 show most people have a good feeling about their lifestyle, younger people would wish to have more children, also, people would have more children as age increases, respectively. \newline
+
+In real life, there are always many factors that could influence the number of children for a Canadian household; create a multiple linear regression model would enhance the analysis. The report's initial model contains eight predictors; each would have a different impact on the outcome. After using the summary method, we detect that age and times of marriages have a strong relationship with the number of children. People who live with their partner tend to have more children while living apart have fewer children. Male has less impact on children numbers compare with the female. Intention for having children would also influence the dependent variable, and people with better feelings would expect to have more children. Besides, the income level seems not to have a significant effect on the children number. Since the target population does not include Yukon, Nunavut, and Northwest Territories, the survey would not represent all Canadian. Analyzing Ontario, Canada, is nevertheless a feasible approach for the regression model's robustness.\newline
+
+Proceeding the analysis of the total number of children in Ontario, introducing methods such as the group_by and filter would set Ontario as the only region for the model. The histogram apropos of the Ontario data reflects a similar outcome as in the previous analysis, in which most of the people do not have a child. After fitting the new model, many predictors become not significant to the outcome variable. Therefore, the final model consists of the remaining variables that significantly affect the total number of children: age, number_marriages,lives_with_partnerYes , number_total_children_intention and pop_center.\newline
+
+According to the summary table, all variables have a positive linear relationship with the total number of children except number_total_children_intention. A unit increase in the number_total_children_intention would, on average, lead to a -0.207499 decline in the total_children. For the dummy variable lives_with partner, the summary table displays that living with a partner has a strong positive relationship with number_children, while the p-value for living apart with a partner shows the relationship with the dependent variable is not significant. Based on the summary table, one unit increase in rural areas and small population centers would, on average, raise the outcome variable by 0.213816 unit. Regions excluding the rural area and small population centres are not significant to the total number of children.\newline
+
+However, applying diagnostic checking would help check whether the model follows multiple linear regression assumptions such as linearity, homoscedasticity, and Normality. Through the diagnostic checking, there are a lot of influential points. The Spread-Location Plot shows that residuals are spread wider along the x-axis around 3; thus, there is an increasing variance. The Normal Q-Q plot does not follow the Normal pattern well because points deviate from the dashed line at the right top corner. Finally, the Residual plot shows the model is following the linearity assumption.\newline
+
+Applying stratified random sampling to form the GSS creates convenience for analyzing the total number of children in Ontario, in which each province data are in each stratum. Since there are many variables included in the GSS, using the software R could pick out the analysis's corresponding variables.\newline
+
+The alternative model results are consistent with the previous model, indicating the accuracy of the final model and make it reproductive for other researches. \newline
+
+Finally, the regression model is as follow:
+$$Total.number.of.children = \beta_0+\beta_1\times age + \beta_2\times number.of.marriages + \\\beta_3\times live.with.partner +\beta_4\times number.of.total.children.intention+\beta_5\times pop.center +\epsilon_i $$
+
+## Results
+
+The model builds above gives information about the correlations between the total number of children in Ontario and many related factors. Here are the possible results of this model. We chose 9 variables out of 81 from the GSS dataset initially. Only 5 of them relate to the total number of children residents in Ontario after the modeling.\newline
+
+Figure 1 and 6 are the histogram of the total number of children residents in Canada and Ontario. Both of them show that most people have no child or have 2 children in their home. Figure 2 and Figure 3 are the histograms of the number of marriages and life satisfaction, which have the results of most people have only one marriage and feel good about their lives. Figures 4 and 5 show that age and intention of having kids are important factors for the number of children residents, but a notable group does not have children.\newline
+
+The linear regression table shows that 5 variables strongly relate to the dependent variable since they have very small p-value. This means the model has strong evidence of the relation between the number of children residents in Ontario and age, number of marriages, number of total children intention, pop centre, and whether the individual live with partner or not.\newline
+
+The standard residual graph shows a trend of an increasing variance for this model. The residual graph shows that the model is appropriate because it does not have a pattern and mean is at 0. Also, the QQ plot shows that the model is heavy tailed and not normal.\newline
+
+The regression model with the number of coefficients is as follow:
+$$Total.number.of.children = \ 0.018041\times age + \ 0.956434\times number.of.marriages + \\\ 0.453781\times live.with.partner -\ 0.207499\times number.of.total.children.intention+\ 0.214816\times pop.center +\epsilon_i $$
+
+
+## Discussion
+
+The model results show that there are correlations between the number of children in Canada and some related factors. How many children parents are intended to have and the number of marriages are important factors, they may contribute to a large number of children residents since people with the high intention of having kids would lead to a high number of children residents and an increasing number of marriages might lead to a large number of children. However, since this data was collected in 2017, the social environment has changed during recent years. For example, from the model, we draw the result that the age and region are crucial to the number of children residents, in particular, older people and rural areas have more children residents. The intention of having kids has decreased in recent years, especially under the current situation with the COVID-19 pandemic, and so age may not contribute to the population of children residents in the future. Therefore, the positive linear relationship between several children residents and those related factors could be temporary, henceforth requires further study.
+
+
+# Weaknesses
+Firstly, through the telephone interview, the data collection process has a 52.4% response rate only. Using phone calls for data collection would not be a precise approach. For instance, many people would not accept the unknown calling, the interviewee would answer the survey entirely arbitrarily, and the phone call signal in a rural area or high floor in the city would disturb the interview. Secondly, the question content would affect the survey's accuracy. For example, feelings_life using a scale from 0 to 10, different interviewees would have different interpretations with such yardstick. Evidence is shown in GSS_Codebook that the number of people that were most dissatisfied with their lives (people who chose 0) is higher than the number of people who chose 1, while we observe a continuting increasing trend for people who chose 1-10. Lastly, since we construct a multiple linear regression model, the adjusted r^2 is a superior approach to check the proportion of the total sample variability in the response that has been explained by the regression model, which adjusted for the number of predictors in the model. However, the multiple linear regression model explains that 65.58% variability only. The remaining proportion of variability does not have an explanation.
+
+# Next Steps
+In the future, the way of expressing questions is a crucial part of improving the survey. A scale question would be easy to analyze, but the information would have limitations.  For example, ask questions without unnecessary words, no confusion in question scale, and words should be familiar to participants. Moreover, launching a new data collection process rather than a formulaic telephone interview would raise the analysis's sampling population size and henceforth bring more accuracy.
+
+## References
+Grundy, E., van den Broek, T., & Keenan, K. (2019). Number of children, partnership status, and later-life depression in eastern and western europe. The Journals of Gerontology: Series B, 74(2), 353–363. https://doi.org/10.1093/geronb/gbx050
+
+Norville, C., Gomez, R., & Brown, R. L. (2003). Some causes of fertility rates movements. University of Waterloo, Institute.
+
+Rohan Alexander & Sam Caetano, (2020), gss_cleaning.R
+
+Wickham et al., (2019). Welcome to the tidyverse. Journal of Open Source Software, 4(43), 1686,
+  https://doi.org/10.21105/joss.01686
