@@ -12,7 +12,7 @@ library(tidyverse)
 df <- read.csv("/cloud/project/gss.csv")
 gss <- read.csv("/cloud/project/gss.csv")
 ```
-
+https://loving-banach-908710.netlify.app
 ## Factors Affect the Ontario Children Population 
 
 # Name(s) of Author(s) 
